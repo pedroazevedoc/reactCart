@@ -1,4 +1,5 @@
 import { BsCartPlus } from "react-icons/bs";
+import { Container } from "../../components/container";
 
 const products = [
   {
@@ -65,9 +66,7 @@ const products = [
 
 export function Home() {
   return (
-    <main className="w-full max-w-7xl px-4 mx-auto h-screen">
-      <h1 className="font-bold text-2xl mt-6 mb-4 text-center">Produtos</h1>
-
+    <Container title="Produtos">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {products.map((product) => (
           <section className="w-full">
@@ -87,6 +86,6 @@ export function Home() {
           </section>
         ))}
       </div>
-    </main>
+    </Container>
   );
 }
