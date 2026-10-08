@@ -69,7 +69,7 @@ export function Home() {
     <Container title="Produtos">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {products.map((product) => (
-          <section className="w-full">
+          <section key={product.id} className="w-full">
             <img 
               className="w-full rounded-lg max-h-60 mb-2"
               alt="Imagem de exemplo"
