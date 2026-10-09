@@ -1,59 +1,52 @@
 import { TfiLayoutLineSolid, TfiPlus, TfiTrash } from "react-icons/tfi";
 import { Container } from "../../components/container";
-
-const products = [
-  {
-    id: 1,
-    name: "Produto de exemplo 1",
-    price: 100.0,
-    image: "https://via.placeholder.com/150",
-  },
-  {
-    id: 2,
-    name: "Produto de exemplo 2",
-    price: 50.0,
-    image: "https://via.placeholder.com/150",
-  },
-  {
-    id: 3,
-    name: "Produto de exemplo 3",
-    price: 75.0,
-    image: "https://via.placeholder.com/150",
-  },
-  {
-    id: 4,
-    name: "Produto de exemplo 4",
-    price: 120.0,
-    image: "https://via.placeholder.com/150",
-  },
-  {
-    id: 5,
-    name: "Produto de exemplo 5",
-    price: 80.0,
-    image: "https://via.placeholder.com/150",
-  },
-];
+import { useContext } from "react";
+import { CartContext } from "../../contexts/CartContext";
+import { Link } from "react-router-dom";
+import { MdOutlineRemoveShoppingCart } from "react-icons/md";
 
 export function Cart() {
+  const { cart } = useContext(CartContext);
+
   return (
     <Container title="Carrinho">
       <div className="flex flex-col space-y-4">
+        {/* Mensagem quando o carrinho está vazio */}
+        {cart.length === 0 && (
+          <div className="flex flex-col items-center justify-center gap-2">
+            <MdOutlineRemoveShoppingCart size={48} className="text-taupe-500" />
+            <p className="font-bold text-taupe-500">Seu carrinho está vazio.</p>
+            <Link 
+              to="/"
+              className="bg-taupe-800 hover:bg-taupe-800/90 transition-colors p-2 rounded text-white flex items-center gap-2"
+            >
+              Acessar produtos
+            </Link>
+          </div>
+        )}
+
         {/* Lista de produtos */}
-        {products.map((product) => (
+        {cart.map((itemCart) => (
           <section
-            key={product.id}
+            key={itemCart.product.id}
             className="flex items-center justify-between p-2 bg-taupe-50 border-b-2 rounded-t-lg border-taupe-300"
           >
             {/* Imagem | Nome | Preço */}
             <div className="flex items-center gap-4">
               <img
-                src={product.image}
-                alt={product.name}
+                src={itemCart.product.thumbnail}
+                alt={itemCart.product.title}
                 className="w-24 object-cover rounded-md"
               />
               <div className="flex flex-col gap-2">
-                <p className="font-medium">{product.name}</p>
-                <p className="text-taupe-500">R$ {product.price.toFixed(2)}</p>
+                <p className="font-medium">{itemCart.product.title}</p>
+                <p className="text-taupe-500">
+                  {itemCart.product.price.toLocaleString('pt-BR', { 
+                    style: 'currency',
+                    currency: 'BRL',
+                    minimumFractionDigits: 2 
+                  })}
+                </p>
               </div>
             </div>
 
@@ -63,12 +56,18 @@ export function Cart() {
                 <button className="flex items-center justify-center bg-taupe-700 text-white px-2 py-2 rounded-md hover:bg-taupe-800 transition-colors">
                   <TfiLayoutLineSolid size={14} />
                 </button>
-                <span className="font-medium">1</span>
+                <span className="font-medium">{itemCart.quantity}</span>
                 <button className="flex items-center justify-center bg-taupe-700 text-white px-2 py-2 rounded-md hover:bg-taupe-800 transition-colors">
                   <TfiPlus size={14} />
                 </button>
               </div>
-              <p className="font-bold">Subtotal: R$ {product.price.toFixed(2)}</p>
+              <p className="font-bold">
+                Subtotal: {itemCart.product.price.toLocaleString('pt-BR', { 
+                  style: 'currency',
+                  currency: 'BRL',
+                  minimumFractionDigits: 2 
+                })}
+              </p>
             </div>
 
             {/* Botão de remoção */}
@@ -79,9 +78,24 @@ export function Cart() {
         ))}
 
         {/* Total */}
-        <p className="font-bold">
-          Total: R$ {products.reduce((acc, product) => acc + product.price, 0).toFixed(2)}
-        </p>
+        {cart.length > 0 && (
+          <div className="flex justify-end mt-4">
+            <p className="font-bold">
+              Total: {cart.reduce((acc, product) => acc + product.price, 0).toLocaleString('pt-BR', { 
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2 
+              })}
+            </p>
+          </div>
+        )}
+        {/* <p className="font-bold">
+          Total: {cart.reduce((acc, product) => acc + product.price, 0).toLocaleString('pt-BR', { 
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 2 
+          })}
+        </p> */}
       </div>
     </Container>
   );
