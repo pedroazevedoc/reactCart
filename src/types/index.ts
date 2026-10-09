@@ -43,12 +43,12 @@ export interface ProductProps {
 export interface CartContextData {
   cart: CartProductProps[];
   cartAmount: number;
+  addToCart: (newItem: ProductProps) => void;
 }
 
-// Produtos do carrinho de compras
+// Produto do carrinho de compras
 export interface CartProductProps {
-  id: number;
-  productId: number;
+  product: ProductProps;
   quantity: number;
   price: number;
   totalPrice: number;

@@ -1,10 +1,12 @@
 import { BsCartPlus } from "react-icons/bs";
 import { Container } from "../../components/container";
 import type { ProductProps } from "../../types";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { api } from "../../services/api";
+import { CartContext } from "../../contexts/CartContext";
 
 export function Home() {
+  const { addToCart } = useContext(CartContext);
   const [ isLoading, setIsLoading ] = useState(false);
   const [ products, setProducts ] = useState<ProductProps[]>([]);
 
@@ -22,6 +24,10 @@ export function Home() {
     }
     fetchProducts();
   }, []);
+
+  const handleAddToCart = (product: ProductProps) => {
+    addToCart(product);
+  };
 
   return (
     <Container title="Produtos">
@@ -49,7 +55,7 @@ export function Home() {
                   minimumFractionDigits: 2 
                 })}
               </strong>
-              <button className="bg-taupe-800 p-1 rounded">
+              <button className="bg-taupe-800 hover:bg-taupe-800/90 transition-colors p-1 rounded cursor-pointer" onClick={() => handleAddToCart(product)}>
                 <BsCartPlus size={20} color="#e8e4e3" />
               </button>
             </div>
