@@ -1,3 +1,4 @@
+// Propriedades do produto
 export interface ProductProps {
   id: number;
   title: string;
@@ -36,4 +37,26 @@ export interface ProductProps {
   }
   images: string[];
   thumbnail: string;
+}
+
+// Contexto do carrinho de compras
+export interface CartContextData {
+  cart: CartProductProps[];
+  cartAmount: number;
+}
+
+// Produtos do carrinho de compras
+export interface CartProductProps {
+  id: number;
+  productId: number;
+  quantity: number;
+  price: number;
+  totalPrice: number;
+  addedAt: string;
+  updatedAt: string;
+}
+
+// Propriedades do provedor do carrinho de compras
+export interface CartProviderProps {
+  children: React.ReactNode;
 }
