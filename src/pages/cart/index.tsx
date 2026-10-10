@@ -22,22 +22,29 @@ export function Cart() {
     toast.success(`Produto removido do carrinho!`);
   };
 
+  // Função para exibir um componente
+  const showTemporaryComponent = () => {
+    if (cart.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center space-y-2 h-64">
+          <MdOutlineRemoveShoppingCart size={48} className="text-taupe-500" />
+          <p className="font-bold text-taupe-500">Seu carrinho está vazio.</p>
+          <Link 
+            to="/"
+            className="bg-taupe-800 hover:bg-taupe-800/90 transition-colors p-2 rounded text-white flex items-center gap-2"
+          >
+            Acessar produtos
+          </Link>
+        </div>
+      );
+    }
+  };
+
   return (
     <Container title="Carrinho">
       <div className="flex flex-col space-y-4">
         {/* Mensagem quando o carrinho está vazio */}
-        {cart.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-2">
-            <MdOutlineRemoveShoppingCart size={48} className="text-taupe-500" />
-            <p className="font-bold text-taupe-500">Seu carrinho está vazio.</p>
-            <Link 
-              to="/"
-              className="bg-taupe-800 hover:bg-taupe-800/90 transition-colors p-2 rounded text-white flex items-center gap-2"
-            >
-              Acessar produtos
-            </Link>
-          </div>
-        )}
+        {showTemporaryComponent()}
 
         {/* Lista de produtos */}
         {cart.map((itemCart) => (

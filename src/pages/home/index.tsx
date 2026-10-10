@@ -5,6 +5,8 @@ import { useContext, useEffect, useState } from "react";
 import { api } from "../../services/api";
 import { CartContext } from "../../contexts/CartContext";
 import toast from "react-hot-toast";
+import { FaSpinner } from "react-icons/fa";
+import { MdOutlineShoppingBag } from "react-icons/md";
 
 export function Home() {
   const { addToCart } = useContext(CartContext);
@@ -27,20 +29,45 @@ export function Home() {
     fetchProducts();
   }, []);
 
+  // Função para adicionar um produto ao carrinho
   const handleAddToCart = (product: ProductProps) => {
     addToCart(product);
     toast.success(`${product.title} adicionado ao carrinho!`);
   };
 
+  // Função para exibir um componente temporário de carregamento ou mensagem de nenhum produto encontrado
+  const showTemporaryComponent = () => {
+    // Mapeamento de status para ícones e mensagens
+    const temporaryStatusMap = {
+      loading: {
+        icon: <FaSpinner className="animate-spin text-taupe-800" size={48} />,
+        message: "Carregando produtos..."
+      },
+      empty: {
+        icon: <MdOutlineShoppingBag className="text-taupe-800" size={48} />,
+        message: "Nenhum produto encontrado."
+      }
+    };
+
+    // Determina o status atual com base no estado de carregamento e na lista de produtos
+    const status = isLoading ? "loading" : (products.length === 0 ? "empty" : null);
+
+    if (status !== null) {
+      return (
+        <div className="flex flex-col justify-center items-center h-64 space-y-2">
+          {temporaryStatusMap[status]?.icon}
+          <p className="text-taupe-800">{temporaryStatusMap[status]?.message}</p>
+        </div>
+      );
+    }
+  };
+
   return (
     <Container title="Produtos">
+      {/* Exibe o componente temporário */}
+      {showTemporaryComponent()}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {isLoading && (
-          <p>Carregando produtos...</p>
-        )} 
-        {(products.length === 0 && !isLoading) && (
-          <p>Nenhum produto encontrado.</p>
-        )}
         {products.map((product) => (
           <section key={product.id} className="w-full">
             <img 
