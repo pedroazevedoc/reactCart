@@ -62,3 +62,8 @@ export interface CartProductProps {
 export interface CartProviderProps {
   children: React.ReactNode;
 }
+
+// Propriedades do componente ProductCard
+export interface ProductCardProps {
+  product: ProductProps;
+}
