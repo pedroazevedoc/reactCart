@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { MdOutlineRemoveShoppingCart } from "react-icons/md";
 
 export function Cart() {
-  const { cart } = useContext(CartContext);
+  const { cart, cartTotal, addToCart, removeFromCart } = useContext(CartContext);
 
   return (
     <Container title="Carrinho">
@@ -52,17 +52,26 @@ export function Cart() {
 
             {/* Controle de quantidade | Total */}
             <div className="flex flex-col items-center gap-2">
+              {/* Controle de quantidade */}
               <div className="flex items-center gap-3 p-1 bg-taupe-100 rounded-md">
-                <button className="flex items-center justify-center bg-taupe-700 text-white px-2 py-2 rounded-md hover:bg-taupe-800 transition-colors">
+                <button
+                  onClick={() => removeFromCart(itemCart.product.id)}
+                  className="flex items-center justify-center bg-taupe-700 text-white hover:bg-taupe-800 transition-colors px-2 py-2 rounded-md cursor-pointer"
+                >
                   <TfiLayoutLineSolid size={14} />
                 </button>
-                <span className="font-medium">{itemCart.quantity}</span>
-                <button className="flex items-center justify-center bg-taupe-700 text-white px-2 py-2 rounded-md hover:bg-taupe-800 transition-colors">
+                <span className="font-medium">{itemCart.amount}</span>
+                <button
+                  onClick={() => addToCart(itemCart.product)}
+                  className="flex items-center justify-center bg-taupe-700 text-white hover:bg-taupe-800 transition-colors  px-2 py-2 rounded-md cursor-pointer"
+                >
                   <TfiPlus size={14} />
                 </button>
               </div>
+
+              {/* Preço total do item no carrinho */}
               <p className="font-bold">
-                Subtotal: {itemCart.product.price.toLocaleString('pt-BR', { 
+                Subtotal: {itemCart.totalPrice.toLocaleString('pt-BR', { 
                   style: 'currency',
                   currency: 'BRL',
                   minimumFractionDigits: 2 
@@ -71,7 +80,10 @@ export function Cart() {
             </div>
 
             {/* Botão de remoção */}
-            <button className="bg-transparent text-red-500 hover:bg-red-100 px-2 py-2 rounded-md transition-colors">
+            <button
+              onClick={() => removeFromCart(itemCart.product.id)}
+              className="bg-transparent text-red-500 hover:bg-red-100 transition-colors px-2 py-2 rounded-md  cursor-pointer"
+            >
               <TfiTrash size={18} />
             </button>
           </section>
@@ -81,21 +93,10 @@ export function Cart() {
         {cart.length > 0 && (
           <div className="flex justify-end mt-4">
             <p className="font-bold">
-              Total: {cart.reduce((acc, product) => acc + product.price, 0).toLocaleString('pt-BR', { 
-                style: 'currency',
-                currency: 'BRL',
-                minimumFractionDigits: 2 
-              })}
+              Total: {cartTotal}
             </p>
           </div>
         )}
-        {/* <p className="font-bold">
-          Total: {cart.reduce((acc, product) => acc + product.price, 0).toLocaleString('pt-BR', { 
-            style: 'currency',
-            currency: 'BRL',
-            minimumFractionDigits: 2 
-          })}
-        </p> */}
       </div>
     </Container>
   );
