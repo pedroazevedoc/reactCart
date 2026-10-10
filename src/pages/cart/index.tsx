@@ -4,9 +4,23 @@ import { useContext } from "react";
 import { CartContext } from "../../contexts/CartContext";
 import { Link } from "react-router-dom";
 import { MdOutlineRemoveShoppingCart } from "react-icons/md";
+import type { ProductProps } from "../../types";
+import toast from "react-hot-toast";
 
 export function Cart() {
   const { cart, cartTotal, addToCart, removeFromCart } = useContext(CartContext);
+
+  // Função para adicionar um produto ao carrinho
+  const handleAddToCart = (product: ProductProps) => {
+    addToCart(product);
+    toast.success(`${product.title} adicionado ao carrinho!`);
+  };
+
+  // Função para remover um produto do carrinho
+  const handleRemoveFromCart = (productId: number) => {
+    removeFromCart(productId);
+    toast.success(`Produto removido do carrinho!`);
+  };
 
   return (
     <Container title="Carrinho">
@@ -55,14 +69,14 @@ export function Cart() {
               {/* Controle de quantidade */}
               <div className="flex items-center gap-3 p-1 bg-taupe-100 rounded-md">
                 <button
-                  onClick={() => removeFromCart(itemCart.product.id)}
+                  onClick={() => handleRemoveFromCart(itemCart.product.id)}
                   className="flex items-center justify-center bg-taupe-700 text-white hover:bg-taupe-800 transition-colors px-2 py-2 rounded-md cursor-pointer"
                 >
                   <TfiLayoutLineSolid size={14} />
                 </button>
                 <span className="font-medium">{itemCart.amount}</span>
                 <button
-                  onClick={() => addToCart(itemCart.product)}
+                  onClick={() => handleAddToCart(itemCart.product)}
                   className="flex items-center justify-center bg-taupe-700 text-white hover:bg-taupe-800 transition-colors  px-2 py-2 rounded-md cursor-pointer"
                 >
                   <TfiPlus size={14} />
@@ -81,7 +95,7 @@ export function Cart() {
 
             {/* Botão de remoção */}
             <button
-              onClick={() => removeFromCart(itemCart.product.id)}
+              onClick={() => handleRemoveFromCart(itemCart.product.id)}
               className="bg-transparent text-red-500 hover:bg-red-100 transition-colors px-2 py-2 rounded-md  cursor-pointer"
             >
               <TfiTrash size={18} />

@@ -4,6 +4,7 @@ import type { ProductProps } from "../../types";
 import { useContext, useEffect, useState } from "react";
 import { api } from "../../services/api";
 import { CartContext } from "../../contexts/CartContext";
+import toast from "react-hot-toast";
 
 export function Home() {
   const { addToCart } = useContext(CartContext);
@@ -18,6 +19,7 @@ export function Home() {
         setProducts(response.data.products);
       } catch (error) {
         console.error("Erro ao buscar produtos:", error);
+        toast.error("Erro ao buscar produtos. Por favor, tente novamente mais tarde.");
       } finally {
         setIsLoading(false);
       }
@@ -27,6 +29,7 @@ export function Home() {
 
   const handleAddToCart = (product: ProductProps) => {
     addToCart(product);
+    toast.success(`${product.title} adicionado ao carrinho!`);
   };
 
   return (
@@ -55,7 +58,10 @@ export function Home() {
                   minimumFractionDigits: 2 
                 })}
               </strong>
-              <button className="bg-taupe-800 hover:bg-taupe-800/90 transition-colors p-1 rounded cursor-pointer" onClick={() => handleAddToCart(product)}>
+              <button 
+                onClick={() => handleAddToCart(product)}
+                className="bg-taupe-800 hover:bg-taupe-800/90 transition-colors p-1 rounded cursor-pointer"
+              >
                 <BsCartPlus size={20} color="#e8e4e3" />
               </button>
             </div>
