@@ -36,12 +36,19 @@ function CartProvider({ children }: CartProviderProps) {
   };
 
   // Função para remover um produto do carrinho
-  const removeFromCart = (productId: number) => {
+  const removeFromCart = (productId: number, removeAll: boolean) => {
     // Verifica se o produto está no carrinho
     const indexItem = cart.findIndex(item => item.product.id === productId);
 
-    // Se a quantidade do produto for maior que 1, apenas diminui a quantidade e atualiza o preço total
     if (cart[indexItem].amount > 1) {
+      // Se a quantidade do produto for maior que 1 e removeAll for true, remove o produto do carrinho
+      if (removeAll) {
+        const updatedCart = cart.filter(item => item.product.id !== productId);
+        setCart(updatedCart);
+        calculateCartTotal(updatedCart);
+        return;
+      }
+      // Se a quantidade do produto for maior que 1, apenas diminui a quantidade e atualiza o preço total
       const updatedCart = [...cart];
       updatedCart[indexItem].amount -= 1;
       updatedCart[indexItem].totalPrice = updatedCart[indexItem].amount * updatedCart[indexItem].price;

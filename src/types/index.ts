@@ -45,7 +45,7 @@ export interface CartContextData {
   cartAmount: number;
   cartTotal: string;
   addToCart: (newItem: ProductProps) => void;
-  removeFromCart: (productId: number) => void;
+  removeFromCart: (productId: number, removeAll: boolean) => void;
 }
 
 // Produto do carrinho de compras
@@ -61,4 +61,9 @@ export interface CartProductProps {
 // Propriedades do provedor do carrinho de compras
 export interface CartProviderProps {
   children: React.ReactNode;
+}
+
+// Propriedades do componente ProductCard
+export interface ProductCardProps {
+  product: ProductProps;
 }

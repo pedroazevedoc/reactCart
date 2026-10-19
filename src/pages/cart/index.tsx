@@ -17,8 +17,8 @@ export function Cart() {
   };
 
   // Função para remover um produto do carrinho
-  const handleRemoveFromCart = (productId: number) => {
-    removeFromCart(productId);
+  const handleRemoveFromCart = (productId: number, removeAll: boolean) => {
+    removeFromCart(productId, removeAll);
     toast.success(`Produto removido do carrinho!`);
   };
 
@@ -77,7 +77,7 @@ export function Cart() {
                 {/* Controle de quantidade */}
                 <div className="flex items-center gap-3 p-1 bg-taupe-100 rounded-md">
                   <button
-                    onClick={() => handleRemoveFromCart(itemCart.product.id)}
+                    onClick={() => handleRemoveFromCart(itemCart.product.id, false)}
                     className="flex items-center justify-center bg-taupe-700 text-white hover:bg-taupe-800 transition-colors px-2 py-2 rounded-md cursor-pointer"
                   >
                     <TfiLayoutLineSolid size={14} />
@@ -103,7 +103,7 @@ export function Cart() {
 
               {/* Botão de remoção */}
               <button
-                onClick={() => handleRemoveFromCart(itemCart.product.id)}
+                onClick={() => handleRemoveFromCart(itemCart.product.id, true)}
                 className="bg-transparent text-red-500 hover:bg-red-100 transition-colors px-2 py-2 rounded-md  cursor-pointer"
               >
                 <TfiTrash size={18} />
