@@ -45,7 +45,7 @@ export interface CartContextData {
   cartAmount: number;
   cartTotal: string;
   addToCart: (newItem: ProductProps) => void;
-  removeFromCart: (productId: number) => void;
+  removeFromCart: (productId: number, removeAll: boolean) => void;
 }
 
 // Produto do carrinho de compras
