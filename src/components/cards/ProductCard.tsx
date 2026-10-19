@@ -21,7 +21,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const discountedPrice = calculateDiscountedPrice(product.price, product.discountPercentage);
 
   return (
-    <section key={product.id} className="w-full bg-taupe-50 p-2 rounded-lg border border-taupe-300 flex flex-col justify-between">
+    <section key={product.id} className="w-full bg-taupe-50 p-2 rounded-lg border border-taupe-300 flex flex-col justify-between transition-transform hover:scale-103 cursor-pointer">
       <div className="flex flex-nowrap gap-1">
         {/* Tags do produto */}
         {product.tags.map((tag, index) => (
@@ -32,11 +32,21 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Imagem do produto */}
-      <img 
-        className="w-full rounded-lg max-h-60"
-        alt="Imagem de exemplo"
-        src={product.thumbnail ?? "https://via.placeholder.com/150"}
-      />
+      <div className="relative w-full h-60 group overflow-hidden mt-2">
+        {/* Imagem principal */}
+        <img 
+          className="absolute inset-0 w-full rounded-lg max-h-60 object-cover transition-opacity duration-300 group-hover:opacity-0"
+          alt="Imagem principal do produto"
+          src={product.thumbnail ?? "https://via.placeholder.com/150"}
+        />
+
+        {/* Imagem secundária (hover) */}
+        <img 
+          className="absolute inset-0 w-full rounded-lg max-h-60 object-cover transition-opacity duration-300 opacity-0 group-hover:opacity-100"
+          alt="Imagem secundária do produto"
+          src={product.images[1] ?? product.thumbnail ?? "https://via.placeholder.com/150"}
+        />
+      </div>
       {/* Marca do produto */}
       <p className="text-taupe-500/90 text-sm">{product.brand}</p>
       {/* Nome do produto */}
