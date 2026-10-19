@@ -1,7 +1,15 @@
+type BadgeColor = 
+  "default" |
+  "primary" | 
+  "blue" | 
+  "success" | 
+  "warning" | 
+  "error" | 
+  "outline";
+
 export interface BadgeProps {
   text: string;
-  color?: "primary" | "secondary" | "success" | "warning" | "error";
+  color?: BadgeColor;
   size?: "small" | "medium" | "large";
   rounded?: boolean;
-  className?: string;
 }
