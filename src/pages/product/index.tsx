@@ -151,7 +151,7 @@ export function Product() {
           <section className="flex flex-col md:flex-row gap-6">
             {/* Galeria de imagens */}
             <div className="w-full md:w-1/2">
-              <div className="w-full h-72 md:h-120 overflow-hidden rounded-lg border border-taupe-300 bg-taupe-50">
+              <div className="w-full h-72 md:h-130 overflow-hidden rounded-lg border border-taupe-300 bg-taupe-50">
                 <img
                   src={mainImage ?? "https://via.placeholder.com/300"}
                   alt={product.title}
