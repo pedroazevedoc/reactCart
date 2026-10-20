@@ -5,15 +5,31 @@ import type { ProductCardProps, ProductProps } from "../../types";
 import { BsCartPlus } from "react-icons/bs";
 import { Badge } from "../ui/badge";
 import { useNavigate } from "react-router-dom";
+import { MdFavoriteBorder } from "react-icons/md";
+import { FavoriteContext } from "../../contexts/FavoriteContext";
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useContext(CartContext);
+  const { addToFavorites } = useContext(FavoriteContext);
   const navigation = useNavigate();
   
   // Função para adicionar um produto ao carrinho
-  const handleAddToCart = (product: ProductProps) => {
+  const handleAddToCart = (product: ProductProps, event: React.MouseEvent) => {
+    event.stopPropagation();
     addToCart(product);
     toast.success(`${product.title} adicionado ao carrinho!`);
+  };
+
+  // Função para adicionar um produto aos favoritos
+  const handleAddToFavorites = (product: ProductProps, event: React.MouseEvent) => {
+    event.stopPropagation();
+    addToFavorites(product);
+    toast.success(`${product.title} adicionado aos favoritos!`);
+  };
+
+  // Função para redirecionar para a página de detalhes do produto
+  const handleViewProduct = (id: number) => {
+    navigation(`/products/${id}`);
   };
 
   // Função para calcular o preço com desconto
@@ -21,11 +37,6 @@ export function ProductCard({ product }: ProductCardProps) {
     return price - (price * (discountPercentage / 100));
   };
   const discountedPrice = calculateDiscountedPrice(product.price, product.discountPercentage);
-
-  // Função para redirecionar para a página de detalhes do produto
-  const handleViewProduct = (id: number) => {
-    navigation(`/products/${id}`);
-  };
 
   return (
     <section 
@@ -82,13 +93,26 @@ export function ProductCard({ product }: ProductCardProps) {
           </p>
         </div>
 
-        {/* Botão para adicionar ao carrinho */}
-        <button 
-          onClick={() => handleAddToCart(product)}
-          className="bg-transparent hover:bg-taupe-400 transition-colors p-1 rounded cursor-pointer"
-        >
-          <BsCartPlus size={20} color="#1d1816" />
-        </button>
+        {/* Botões de ação */}
+        <div className="flex items-center gap-1">
+          {/* Botão para adicionar ao favorito */}
+          <button 
+            type="button"
+            onClick={(event) => handleAddToFavorites(product, event)}
+            className="bg-transparent hover:bg-taupe-400 transition-colors p-1 rounded cursor-pointer"
+          >
+            <MdFavoriteBorder size={20} color="#1d1816" />
+          </button>
+
+          {/* Botão para adicionar ao carrinho */}
+          <button 
+            type="button"
+            onClick={(event) => handleAddToCart(product, event)}
+            className="bg-transparent hover:bg-taupe-400 transition-colors p-1 rounded cursor-pointer"
+          >
+            <BsCartPlus size={20} color="#1d1816" />
+          </button>
+        </div>
       </div>
       {/* Desconto */}
       <p className="text-taupe-700/90 text-sm">{product.discountPercentage}% OFF</p>
