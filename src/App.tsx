@@ -3,6 +3,7 @@ import { Cart } from "./pages/cart";
 import { Layout } from "./components/layout";
 import { Home } from "./pages/home";
 import { Product } from "./pages/product";
+import { NotFound } from "./pages/not-found";
 
 export const router = createBrowserRouter([
   {
@@ -19,7 +20,11 @@ export const router = createBrowserRouter([
       {
         path: "/products/:id",
         element: <Product />,
-      }
+      },
+      {
+        path: "*",
+        element: <NotFound />,
+      },
     ],
   },
 ]);
