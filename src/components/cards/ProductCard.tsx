@@ -4,9 +4,11 @@ import toast from "react-hot-toast";
 import type { ProductCardProps, ProductProps } from "../../types";
 import { BsCartPlus } from "react-icons/bs";
 import { Badge } from "../ui/badge";
+import { useNavigate } from "react-router-dom";
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useContext(CartContext);
+  const navigation = useNavigate();
   
   // Função para adicionar um produto ao carrinho
   const handleAddToCart = (product: ProductProps) => {
@@ -20,8 +22,17 @@ export function ProductCard({ product }: ProductCardProps) {
   };
   const discountedPrice = calculateDiscountedPrice(product.price, product.discountPercentage);
 
+  // Função para redirecionar para a página de detalhes do produto
+  const handleViewProduct = (id: number) => {
+    navigation(`/products/${id}`);
+  };
+
   return (
-    <section key={product.id} className="w-full bg-taupe-50 p-2 rounded-lg border border-taupe-300 flex flex-col justify-between transition-transform hover:scale-103 cursor-pointer">
+    <section 
+      key={product.id} 
+      onClick={() => handleViewProduct(product.id)}
+      className="w-full bg-taupe-50 p-2 rounded-lg border border-taupe-300 flex flex-col justify-between transition-transform hover:scale-103 cursor-pointer"
+    >
       <div className="flex flex-nowrap gap-1">
         {/* Tags do produto */}
         {product.tags.map((tag, index) => (

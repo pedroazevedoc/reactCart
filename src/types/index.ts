@@ -26,7 +26,7 @@ export interface ProductProps {
     date: string;
     reviewerName: string;
     reviewerEmail: string;
-  }
+  }[];
   returnPolicy: string;
   minimumOrderQuantity: number;
   meta: {

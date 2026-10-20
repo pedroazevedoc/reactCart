@@ -2,13 +2,14 @@ import { TfiLayoutLineSolid, TfiPlus, TfiTrash } from "react-icons/tfi";
 import { Container } from "../../components/container";
 import { useContext } from "react";
 import { CartContext } from "../../contexts/CartContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { MdOutlineRemoveShoppingCart } from "react-icons/md";
 import type { ProductProps } from "../../types";
 import toast from "react-hot-toast";
 
 export function Cart() {
   const { cart, cartTotal, addToCart, removeFromCart } = useContext(CartContext);
+  const navigation = useNavigate();
 
   // Função para adicionar um produto ao carrinho
   const handleAddToCart = (product: ProductProps) => {
@@ -21,6 +22,11 @@ export function Cart() {
     removeFromCart(productId, removeAll);
     toast.success(`Produto removido do carrinho!`);
   };
+
+  // Função para redirecionar para a página de detalhes do produto
+  const handleViewProduct = (id: number) => {
+    navigation(`/products/${id}`);
+  }
 
   // Função para exibir um componente
   const showTemporaryComponent = () => {
@@ -60,7 +66,12 @@ export function Cart() {
                 className="w-24 object-cover rounded-md"
               />
               <div className="flex flex-col gap-2">
-                <p className="font-medium">{itemCart.product.title}</p>
+                <p
+                  onClick={() => handleViewProduct(itemCart.product.id)}
+                  className="font-medium hover:underline cursor-pointer"
+                >
+                  {itemCart.product.title}
+                </p>
                 <p className="text-taupe-500">
                   {itemCart.product.price.toLocaleString('pt-BR', { 
                     style: 'currency',
