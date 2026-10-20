@@ -67,3 +67,21 @@ export interface CartProviderProps {
 export interface ProductCardProps {
   product: ProductProps;
 }
+
+// Contexto dos favoritos
+export interface FavoriteContextData {
+  favorites: FavoriteProductProps[];
+  addToFavorites: (newItem: ProductProps) => void;
+  removeFromFavorites: (productId: number) => void;
+}
+
+// Produto do favorito
+export interface FavoriteProductProps {
+  product: ProductProps;
+  addedAt: string;
+}
+
+// Propriedades do provedor dos favoritos
+export interface FavoriteProviderProps {
+  children: React.ReactNode;
+}
