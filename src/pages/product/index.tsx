@@ -4,11 +4,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../../services/api";
 import toast from "react-hot-toast";
 import { FaRegStar, FaShieldAlt, FaSpinner, FaStar, FaTruck, FaUndo } from "react-icons/fa";
-import { MdOutlineShoppingBag } from "react-icons/md";
+import { MdFavoriteBorder, MdOutlineShoppingBag } from "react-icons/md";
 import { BsCartPlus } from "react-icons/bs";
 import type { ProductProps } from "../../types";
 import { Badge } from "../../components/ui/badge";
 import { CartContext } from "../../contexts/CartContext";
+import { FavoriteContext } from "../../contexts/FavoriteContext";
 
 // Formata um valor numérico no padrão de moeda brasileira
 const formatCurrency = (value: number) =>
@@ -75,6 +76,7 @@ export function Product() {
   const { id } = useParams();
   const navigation = useNavigate();
   const { addToCart } = useContext(CartContext);
+  const { addToFavorites } = useContext(FavoriteContext);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -125,6 +127,12 @@ export function Product() {
   const handleAddToCart = (product: ProductProps) => {
     addToCart(product);
     toast.success(`${product.title} adicionado ao carrinho!`);
+  };
+
+  // Adiciona o produto exibido aos favoritos
+  const handleAddToFavorites = (product: ProductProps) => {
+    addToFavorites(product);
+    toast.success(`${product.title} adicionado aos favoritos!`);
   };
 
   // Preço com desconto aplicado
@@ -234,15 +242,28 @@ export function Product() {
               {/* Descrição */}
               <p className="text-taupe-600 leading-relaxed">{product.description}</p>
 
-              {/* Adicionar ao carrinho */}
-              <button
-                type="button"
-                onClick={() => handleAddToCart(product)}
-                className="w-full md:w-auto mt-2 flex items-center justify-center gap-2 bg-taupe-800 hover:bg-taupe-800/90 text-taupe-50 font-medium px-6 py-3 rounded-lg transition-colors cursor-pointer"
-              >
-                <BsCartPlus size={20} />
-                Adicionar ao carrinho
-              </button>
+              {/* Botões de ação */}
+              <div className="flex flex-col md:flex-row gap-2 mt-3">
+                {/* Adicionar aos favoritos */}
+                <button
+                  type="button"
+                  onClick={() => handleAddToFavorites(product)}
+                  className="w-full md:mb-0 flex items-center justify-center gap-2 bg-taupe-50 hover:bg-taupe-100 text-taupe-800 font-medium px-6 py-3 rounded-lg transition-colors cursor-pointer"
+                >
+                  <MdFavoriteBorder size={20} />
+                  Adicionar aos favoritos
+                </button>
+
+                {/* Adicionar ao carrinho */}
+                <button
+                  type="button"
+                  onClick={() => handleAddToCart(product)}
+                  className="w-full flex items-center justify-center gap-2 bg-taupe-800 hover:bg-taupe-800/90 text-taupe-50 font-medium px-6 py-3 rounded-lg transition-colors cursor-pointer"
+                >
+                  <BsCartPlus size={20} />
+                  Adicionar ao carrinho
+                </button>
+              </div>
 
               <p className="text-xs text-taupe-500">
                 Pedido mínimo de {product.minimumOrderQuantity} unidades

@@ -61,7 +61,9 @@ export function Home() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {products.map((product) => (
-          <ProductCard product={product} />
+          <div key={product.id}>
+            <ProductCard product={product} />
+          </div>
         ))}
       </div>
     </Container>

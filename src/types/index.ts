@@ -39,6 +39,11 @@ export interface ProductProps {
   thumbnail: string;
 }
 
+// Propriedades do componente AppProviders
+export interface AppProvidersProps {
+  children: React.ReactNode;
+}
+
 // Contexto do carrinho de compras
 export interface CartContextData {
   cart: CartProductProps[];
@@ -66,4 +71,22 @@ export interface CartProviderProps {
 // Propriedades do componente ProductCard
 export interface ProductCardProps {
   product: ProductProps;
+}
+
+// Contexto dos favoritos
+export interface FavoriteContextData {
+  favorites: FavoriteProductProps[];
+  addToFavorites: (newItem: ProductProps) => void;
+  removeFromFavorites: (productId: number) => void;
+}
+
+// Produto do favorito
+export interface FavoriteProductProps {
+  product: ProductProps;
+  addedAt: string;
+}
+
+// Propriedades do provedor dos favoritos
+export interface FavoriteProviderProps {
+  children: React.ReactNode;
 }
