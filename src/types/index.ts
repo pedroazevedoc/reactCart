@@ -39,6 +39,11 @@ export interface ProductProps {
   thumbnail: string;
 }
 
+// Propriedades do componente AppProviders
+export interface AppProvidersProps {
+  children: React.ReactNode;
+}
+
 // Contexto do carrinho de compras
 export interface CartContextData {
   cart: CartProductProps[];
