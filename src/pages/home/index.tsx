@@ -7,8 +7,8 @@ import { FiSearch } from "react-icons/fi";
 import { MdOutlineShoppingBag } from "react-icons/md";
 import { useSearchParams } from "react-router-dom";
 import { ProductCard } from "../../components/cards/ProductCard";
-import { getProducts } from "../../services/products";
-import type { SortOrder } from "../../services/products";
+import { getCategories, getProducts } from "../../services/products";
+import type { ProductCategory, SortOrder } from "../../services/products";
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -29,10 +29,17 @@ export function Home() {
   const query = searchParams.get("q") ?? "";
   // Ordenação da URL, no formato "sortBy:order" (ex.: "price:asc")
   const sort = searchParams.get("sort") ?? "";
+  // Categoria da URL (slug)
+  const category = searchParams.get("category") ?? "";
   // Busca ativa (após o debounce) usada nas requisições
   const [ activeQuery, setActiveQuery ] = useState(query);
   // Ordenação ativa (após o debounce) usada nas requisições
   const [ activeSort, setActiveSort ] = useState(sort);
+  // Categoria ativa usada nas requisições
+  const [ activeCategory, setActiveCategory ] = useState(category);
+
+  // Categorias disponíveis para o filtro
+  const [ categories, setCategories ] = useState<ProductCategory[]>([]);
 
   const [ products, setProducts ] = useState<ProductProps[]>([]);
   // null = primeira página ainda não carregada (a sentinela fica visível para iniciar a busca)
@@ -68,6 +75,23 @@ export function Home() {
   // Atualiza a ordenação na URL imediatamente (não precisa de debounce)
   const handleSortChange = (value: string) => updateParam("sort", value);
 
+  // Troca a categoria ativa no filtro (clicar na categoria selecionada a remove)
+  const handleCategoryChange = (slug: string) => {
+    updateParam("category", slug === category ? "" : slug);
+  };
+
+  // Carrega as categorias uma única vez para montar o filtro
+  useEffect(() => {
+    const controller = new AbortController();
+    getCategories(controller.signal)
+      .then(setCategories)
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        console.error("Erro ao buscar categorias:", error);
+      });
+    return () => controller.abort();
+  }, []);
+
   // Espera o usuário parar de digitar para aplicar a busca e limpar os resultados antigos
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -95,12 +119,26 @@ export function Home() {
     return () => clearTimeout(timeout);
   }, [sort, activeSort]);
 
+  // Aplica a categoria e limpa os resultados antigos (resposta imediata ao clique)
+  // O timeout (0ms) mantém a atualização fora do corpo síncrono do efeito
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (activeCategory === category) return;
+      setActiveCategory(category);
+      setProducts([]);
+      setTotal(null);
+      setIsLoading(true);
+      setIsLoadingMore(false);
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, [category, activeCategory]);
+
   // Busca uma página de produtos
-  const fetchProducts = useCallback(async (skip: number, q: string, sortOption: string) => {
+  const fetchProducts = useCallback(async (skip: number, q: string, sortOption: string, categorySlug: string) => {
     const search = q.trim();
     // Converte "sortBy:order" em parâmetros separados
     const [ sortBy, order ] = sortOption ? sortOption.split(":") : [ "", "" ];
-    const key = `${search}:${sortOption}:${skip}`;
+    const key = `${search}:${categorySlug}:${sortOption}:${skip}`;
 
     // A mesma requisição já está em andamento
     if (inFlightRef.current === key) return;
@@ -115,6 +153,7 @@ export function Home() {
       const data = await getProducts(
         {
           q: search || undefined,
+          category: categorySlug || undefined,
           sortBy: sortBy || undefined,
           order: (order as SortOrder) || undefined,
           limit: PAGE_SIZE,
@@ -152,16 +191,26 @@ export function Home() {
       if (entries[0].isIntersecting && hasMore) {
         // Callback do observer: é permitido atualizar o state aqui
         setIsLoadingMore(products.length > 0);
-        fetchProducts(products.length, activeQuery, activeSort);
+        fetchProducts(products.length, activeQuery, activeSort, activeCategory);
       }
     }, { rootMargin: "300px" }); // Busca antes do usuário chegar ao fim da lista
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, products.length, activeQuery, activeSort, fetchProducts]);;
+  }, [hasMore, products.length, activeQuery, activeSort, activeCategory, fetchProducts]);
+
+  // Nome legível da categoria ativa
+  const activeCategoryName = categories.find(item => item.slug === category)?.name;
 
   // Função para exibir um componente temporário de carregamento ou mensagem de nenhum produto encontrado
   const showTemporaryComponent = () => {
+    // Mensagem de vazio conforme os filtros ativos
+    const emptyMessage = query.trim()
+      ? `Nenhum produto encontrado para “${query.trim()}”.`
+      : activeCategoryName
+        ? `Nenhum produto encontrado em ${activeCategoryName}.`
+        : "Nenhum produto encontrado.";
+
     // Mapeamento de status para ícones e mensagens
     const temporaryStatusMap = {
       loading: {
@@ -170,9 +219,7 @@ export function Home() {
       },
       empty: {
         icon: <MdOutlineShoppingBag className="text-taupe-800" size={48} />,
-        message: query.trim()
-          ? `Nenhum produto encontrado para “${query.trim()}”.`
-          : "Nenhum produto encontrado."
+        message: emptyMessage
       }
     };
 
@@ -224,10 +271,46 @@ export function Home() {
         </select>
       </div>
 
-      {/* Quantidade de resultados da busca */}
-      {query.trim() && !isLoading && total !== null && (
+      {/* Filtro por categoria */}
+      {categories.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-2 mb-4 max-w-4xl mx-auto">
+          <button
+            type="button"
+            onClick={() => handleCategoryChange("")}
+            aria-pressed={!category}
+            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors cursor-pointer ${
+              !category
+                ? "bg-taupe-800 text-taupe-50 border-taupe-800"
+                : "bg-transparent text-taupe-800 border-taupe-300 hover:border-taupe-800"
+            }`}
+          >
+            Todas
+          </button>
+
+          {categories.map((item) => (
+            <button
+              key={item.slug}
+              type="button"
+              onClick={() => handleCategoryChange(item.slug)}
+              aria-pressed={category === item.slug}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors cursor-pointer ${
+                category === item.slug
+                  ? "bg-taupe-800 text-taupe-50 border-taupe-800"
+                  : "bg-transparent text-taupe-800 border-taupe-300 hover:border-taupe-800"
+              }`}
+            >
+              {item.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Quantidade de resultados dos filtros ativos */}
+      {!isLoading && total !== null && (query.trim() || activeCategoryName) && (
         <p className="text-center text-sm text-taupe-500 mb-4">
-          {total} {total === 1 ? "resultado" : "resultados"} para “{query.trim()}”
+          {total} {total === 1 ? "resultado" : "resultados"}
+          {query.trim() && ` para “${query.trim()}”`}
+          {activeCategoryName && ` em ${activeCategoryName}`}
         </p>
       )}
 
