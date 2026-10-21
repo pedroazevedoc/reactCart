@@ -8,17 +8,31 @@ import { MdOutlineShoppingBag } from "react-icons/md";
 import { useSearchParams } from "react-router-dom";
 import { ProductCard } from "../../components/cards/ProductCard";
 import { getProducts } from "../../services/products";
+import type { SortOrder } from "../../services/products";
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
+
+// Opções de ordenação exibidas no select (value = "sortBy:order")
+const SORT_OPTIONS = [
+  { value: "", label: "Relevância" },
+  { value: "price:asc", label: "Menor preço" },
+  { value: "price:desc", label: "Maior preço" },
+  { value: "rating:desc", label: "Melhor avaliação" },
+  { value: "discountPercentage:desc", label: "Maior desconto" },
+];
 
 export function Home() {
   const [ searchParams, setSearchParams ] = useSearchParams();
 
   // Query da URL
   const query = searchParams.get("q") ?? "";
+  // Ordenação da URL, no formato "sortBy:order" (ex.: "price:asc")
+  const sort = searchParams.get("sort") ?? "";
   // Busca ativa (após o debounce) usada nas requisições
   const [ activeQuery, setActiveQuery ] = useState(query);
+  // Ordenação ativa (após o debounce) usada nas requisições
+  const [ activeSort, setActiveSort ] = useState(sort);
 
   const [ products, setProducts ] = useState<ProductProps[]>([]);
   // null = primeira página ainda não carregada (a sentinela fica visível para iniciar a busca)
@@ -35,18 +49,24 @@ export function Home() {
   // Indica se ainda existem produtos a carregar
   const hasMore = total === null || products.length < total;
 
-  // Atualiza a busca na URL a cada tecla (replace: não polui o histórico)
-  const handleSearchChange = (value: string) => {
+  // Atualiza um parâmetro na URL (replace: não polui o histórico)
+  const updateParam = (key: string, value: string) => {
     setSearchParams(prev => {
       const params = new URLSearchParams(prev);
       if (value) {
-        params.set("q", value);
+        params.set(key, value);
       } else {
-        params.delete("q");
+        params.delete(key);
       }
       return params;
     }, { replace: true });
   };
+
+  // Atualiza a busca na URL a cada tecla
+  const handleSearchChange = (value: string) => updateParam("q", value);
+
+  // Atualiza a ordenação na URL imediatamente (não precisa de debounce)
+  const handleSortChange = (value: string) => updateParam("sort", value);
 
   // Espera o usuário parar de digitar para aplicar a busca e limpar os resultados antigos
   useEffect(() => {
@@ -61,10 +81,26 @@ export function Home() {
     return () => clearTimeout(timeout);
   }, [query, activeQuery]);
 
+  // Aplica a ordenação e limpa os resultados antigos
+  // O timeout (0ms) mantém a atualização fora do corpo síncrono do efeito
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (activeSort === sort) return;
+      setActiveSort(sort);
+      setProducts([]);
+      setTotal(null);
+      setIsLoading(true);
+      setIsLoadingMore(false);
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, [sort, activeSort]);
+
   // Busca uma página de produtos
-  const fetchProducts = useCallback(async (skip: number, q: string) => {
+  const fetchProducts = useCallback(async (skip: number, q: string, sortOption: string) => {
     const search = q.trim();
-    const key = `${search}:${skip}`;
+    // Converte "sortBy:order" em parâmetros separados
+    const [ sortBy, order ] = sortOption ? sortOption.split(":") : [ "", "" ];
+    const key = `${search}:${sortOption}:${skip}`;
 
     // A mesma requisição já está em andamento
     if (inFlightRef.current === key) return;
@@ -77,7 +113,13 @@ export function Home() {
 
     try {
       const data = await getProducts(
-        { q: search || undefined, limit: PAGE_SIZE, skip },
+        {
+          q: search || undefined,
+          sortBy: sortBy || undefined,
+          order: (order as SortOrder) || undefined,
+          limit: PAGE_SIZE,
+          skip,
+        },
         controller.signal
       );
       if (controller.signal.aborted) return;
@@ -110,13 +152,13 @@ export function Home() {
       if (entries[0].isIntersecting && hasMore) {
         // Callback do observer: é permitido atualizar o state aqui
         setIsLoadingMore(products.length > 0);
-        fetchProducts(products.length, activeQuery);
+        fetchProducts(products.length, activeQuery, activeSort);
       }
     }, { rootMargin: "300px" }); // Busca antes do usuário chegar ao fim da lista
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, products.length, activeQuery, fetchProducts]);
+  }, [hasMore, products.length, activeQuery, activeSort, fetchProducts]);;
 
   // Função para exibir um componente temporário de carregamento ou mensagem de nenhum produto encontrado
   const showTemporaryComponent = () => {
@@ -149,20 +191,37 @@ export function Home() {
 
   return (
     <Container title="Produtos">
-      {/* Input de busca de produtos */}
-      <div className="relative mb-4 max-w-md mx-auto">
-        <FiSearch
-          size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-taupe-500"
-        />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => handleSearchChange(event.target.value)}
-          placeholder="Buscar produtos pelo nome..."
-          aria-label="Buscar produtos"
-          className="w-full pl-9 pr-4 py-2 text-sm bg-taupe-50 border border-taupe-300 rounded-lg text-taupe-800 placeholder:text-taupe-500 focus:outline-none focus:border-taupe-800 transition-colors"
-        />
+      {/* Busca e ordenação */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4 max-w-3xl mx-auto">
+        {/* Input de busca de produtos */}
+        <div className="relative flex-1">
+          <FiSearch
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-taupe-500"
+          />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => handleSearchChange(event.target.value)}
+            placeholder="Buscar produtos pelo nome..."
+            aria-label="Buscar produtos"
+            className="w-full pl-9 pr-4 py-2 text-sm bg-taupe-50 border border-taupe-300 rounded-lg text-taupe-800 placeholder:text-taupe-500 focus:outline-none focus:border-taupe-800 transition-colors"
+          />
+        </div>
+
+        {/* Select de ordenação */}
+        <select
+          value={sort}
+          onChange={(event) => handleSortChange(event.target.value)}
+          aria-label="Ordenar produtos"
+          className="w-full sm:w-48 py-2 px-3 text-sm bg-taupe-50 border border-taupe-300 rounded-lg text-taupe-800 focus:outline-none focus:border-taupe-800 transition-colors cursor-pointer"
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Quantidade de resultados da busca */}
