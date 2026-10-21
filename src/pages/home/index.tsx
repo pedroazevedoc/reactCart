@@ -3,43 +3,100 @@ import { Container } from "../../components/container";
 import type { ProductProps } from "../../types";
 import toast from "react-hot-toast";
 import { FaSpinner } from "react-icons/fa";
+import { FiSearch } from "react-icons/fi";
 import { MdOutlineShoppingBag } from "react-icons/md";
+import { useSearchParams } from "react-router-dom";
 import { ProductCard } from "../../components/cards/ProductCard";
 import { getProducts } from "../../services/products";
 
-// Quantidade de produtos carregados por página no infinite scroll
 const PAGE_SIZE = 10;
+const SEARCH_DEBOUNCE_MS = 300;
 
 export function Home() {
+  const [ searchParams, setSearchParams ] = useSearchParams();
+
+  // Query da URL
+  const query = searchParams.get("q") ?? "";
+  // Busca ativa (após o debounce) usada nas requisições
+  const [ activeQuery, setActiveQuery ] = useState(query);
+
   const [ products, setProducts ] = useState<ProductProps[]>([]);
   // null = primeira página ainda não carregada (a sentinela fica visível para iniciar a busca)
   const [ total, setTotal ] = useState<number | null>(null);
-  // A primeira página já inicia em carregamento ao montar a tela
+
   const [ isLoading, setIsLoading ] = useState(true);
   const [ isLoadingMore, setIsLoadingMore ] = useState(false);
+
+  // Referência para a sentinela que dispara o carregamento de mais produtos
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const loadingRef = useRef(false);
+  const controllerRef = useRef<AbortController | null>(null);
+  const inFlightRef = useRef<string | null>(null);
 
   // Indica se ainda existem produtos a carregar
   const hasMore = total === null || products.length < total;
 
-  // Busca uma página de produtos e a adiciona à lista
-  // Os states só são atualizados após o await, para não gerar renders em cascata nos efeitos
-  const fetchProducts = useCallback(async (skip: number) => {
-    // Evita requisições duplicadas enquanto uma página está sendo carregada
-    if (loadingRef.current) return;
-    loadingRef.current = true;
+  // Atualiza a busca na URL a cada tecla (replace: não polui o histórico)
+  const handleSearchChange = (value: string) => {
+    setSearchParams(prev => {
+      const params = new URLSearchParams(prev);
+      if (value) {
+        params.set("q", value);
+      } else {
+        params.delete("q");
+      }
+      return params;
+    }, { replace: true });
+  };
+
+  // Espera o usuário parar de digitar para aplicar a busca e limpar os resultados antigos
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (activeQuery === query) return;
+      setActiveQuery(query);
+      setProducts([]);
+      setTotal(null);
+      setIsLoading(true);
+      setIsLoadingMore(false);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timeout);
+  }, [query, activeQuery]);
+
+  // Busca uma página de produtos
+  const fetchProducts = useCallback(async (skip: number, q: string) => {
+    const search = q.trim();
+    const key = `${search}:${skip}`;
+
+    // A mesma requisição já está em andamento
+    if (inFlightRef.current === key) return;
+
+    // Cancela a requisição anterior para evitar respostas fora de ordem
+    controllerRef.current?.abort();
+    inFlightRef.current = key;
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
     try {
-      const data = await getProducts({ limit: PAGE_SIZE, skip });
+      const data = await getProducts(
+        { q: search || undefined, limit: PAGE_SIZE, skip },
+        controller.signal
+      );
+      if (controller.signal.aborted) return;
+
       setTotal(data.total);
       setProducts(prev => skip === 0 ? data.products : [ ...prev, ...data.products ]);
-    } catch (error) {
-      console.error("Erro ao buscar produtos:", error);
-      toast.error("Erro ao buscar produtos. Por favor, tente novamente mais tarde.");
-    } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
-      loadingRef.current = false;
+    } catch (error) {
+      if (controller.signal.aborted) return;
+
+      console.error("Erro ao buscar produtos:", error);
+      toast.error("Erro ao buscar produtos. Por favor, tente novamente mais tarde.");
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    } finally {
+      if (inFlightRef.current === key) {
+        inFlightRef.current = null;
+      }
     }
   }, []);
 
@@ -53,13 +110,13 @@ export function Home() {
       if (entries[0].isIntersecting && hasMore) {
         // Callback do observer: é permitido atualizar o state aqui
         setIsLoadingMore(products.length > 0);
-        fetchProducts(products.length);
+        fetchProducts(products.length, activeQuery);
       }
     }, { rootMargin: "300px" }); // Busca antes do usuário chegar ao fim da lista
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, products.length, fetchProducts]);
+  }, [hasMore, products.length, activeQuery, fetchProducts]);
 
   // Função para exibir um componente temporário de carregamento ou mensagem de nenhum produto encontrado
   const showTemporaryComponent = () => {
@@ -71,7 +128,9 @@ export function Home() {
       },
       empty: {
         icon: <MdOutlineShoppingBag className="text-taupe-800" size={48} />,
-        message: "Nenhum produto encontrado."
+        message: query.trim()
+          ? `Nenhum produto encontrado para “${query.trim()}”.`
+          : "Nenhum produto encontrado."
       }
     };
 
@@ -90,6 +149,29 @@ export function Home() {
 
   return (
     <Container title="Produtos">
+      {/* Input de busca de produtos */}
+      <div className="relative mb-4 max-w-md mx-auto">
+        <FiSearch
+          size={16}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-taupe-500"
+        />
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => handleSearchChange(event.target.value)}
+          placeholder="Buscar produtos pelo nome..."
+          aria-label="Buscar produtos"
+          className="w-full pl-9 pr-4 py-2 text-sm bg-taupe-50 border border-taupe-300 rounded-lg text-taupe-800 placeholder:text-taupe-500 focus:outline-none focus:border-taupe-800 transition-colors"
+        />
+      </div>
+
+      {/* Quantidade de resultados da busca */}
+      {query.trim() && !isLoading && total !== null && (
+        <p className="text-center text-sm text-taupe-500 mb-4">
+          {total} {total === 1 ? "resultado" : "resultados"} para “{query.trim()}”
+        </p>
+      )}
+
       {/* Exibe o componente temporário */}
       {showTemporaryComponent()}
 
